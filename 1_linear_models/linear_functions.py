@@ -1,9 +1,10 @@
 
 # coding: utf-8
 
-# # The maths of a neural network 
 # 
-# A functions is a thing that maps an input to an output. It takes an input, perfoms some operation on it, potentially transforms it in some way, and then returns an output. We define functions explicitly and the mapping from the input to the output is clear and predictable.
+# 
+# #### What even IS a neural network? What does it do?
+# A functions is a thing that maps an input to an output. It takes an input, perfoms some operation on it, potentially transforms it in some way, and then returns an output. We typically define functions explicitly. Explicitely defined functions have a very clear and predictable mapping from input to output.
 # 
 # So what if we have a set of inputs and a known set of outputs, but we don't actually know how to define the function that maps them together? Perhaps this function is extremely complicated and it is either unfeasible, or perhaps untractable, to formulate. This is where we can turn to neural networks for help.
 # 
@@ -11,10 +12,9 @@
 # 
 # There is some necessary background for understanding simple neural networks. Neural networks are executed using linear algebra operations, so we'll cover the bare minimum here on what those operations are.
 
-# Bishop: p.137 Bishop
-
 # #### References
 #  - http://zmjones.com/static/statistical-learning/hornik-nn-1991.pdf
+#  - Bishop: p.137: http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf
 
 
 
@@ -244,4 +244,69 @@ B.dot(np.dot(A, X).T)  # The result is not the same!
 
 
 # With this little bit of back ground, we can move on to piecing together a simple neural network.
+
+# ### Example application of a transformation matrix - the rotation matrix
+# 
+# A simple toy application of a tranformation matrix is the rotation matrix. We can use a rotation matrix to rotate points around the origin!
+
+
+
+def rotation_matrix(vector, angle):
+    " angle in radians! "
+    rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],
+                                [np.sin(angle), np.cos(angle)]])
+    # linear transformation
+    return np.dot(vector, rotation_matrix)
+
+
+
+
+max(x)
+
+
+
+
+n = 100
+x = list(x/10. for x in range(n))
+y = (np.linspace(0, 10, n) + np.random.normal(0.0, .5, n))
+
+plt.scatter(x, y, alpha=0.7, s=15)
+plt.xlim((-11, 11)); plt.ylim((-11, 11))
+plt.axvline(0, alpha=0.3); plt.axhline(0, alpha=0.3);
+
+
+
+
+np.pi
+
+
+
+
+# rotate the points 180 degrees
+new_points = list()
+for _x, _y in zip(x, y):
+    points = np.array([_x, _y])
+    new_points.append(rotation_matrix(points, np.pi))
+new_points = np.asarray(new_points)
+
+# rotation
+plt.scatter(new_points[:, 0], new_points[:, 1], alpha=0.7, s=15)
+plt.xlim((-11, 11)); plt.ylim((-11, 11))
+plt.axvline(0, alpha=0.3); plt.axhline(0, alpha=0.3);
+
+
+
+
+# rotate the points
+new_points = list()
+for _x, _y in zip(x, y):
+    points = np.array([_x, _y])
+    new_points.append(rotation_matrix(points, np.pi/2.))
+new_points = np.asarray(new_points)
+
+# rotation
+plt.scatter(new_points[:, 0], new_points[:, 1], alpha=0.7, s=15)
+plt.xlim((-11, 11)); plt.ylim((-11, 11))
+plt.axvline(0, alpha=0.3); plt.axhline(0, alpha=0.3);
+
 
