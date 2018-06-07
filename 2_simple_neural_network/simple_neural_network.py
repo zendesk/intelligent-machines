@@ -16,10 +16,6 @@
 # Any neural network needs to be designed around a task. In the previous session we talked about some of the mathematical operations that occur inside a feed forward network, but haven't talked about any of the operations that happen on either end.
 # 
 # On the input end, we typically need to consider getting our data cleaned and organized in such a way that that we can feed it in as a vector. On the other end, we need to pose the learning task in the form of a loss function, the goal that we are optimizing for.
-# 
-# Overall, the structure will look something like this:
-
-# ![image.png](attachment:image.png)
 
 # We will use a standard dataset that does not require much preprocessing and we'll choose a simple loss function that doesn't require much work to understand for now. We can focus on these things in a later session. Input preprocessing tends to be different for each network you create, and loss functions will be discussed when we cover the the training process in greater depth.
 # 

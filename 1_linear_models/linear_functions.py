@@ -128,7 +128,7 @@ float(y)
 
 # **A note on notation:**
 # 
-# Formally, vectors are thought of as column vectors, i.e. a matrix with one column and n number of rows (for each element of the vector). So a vector should be represented as a column inside of a 2d structure. Some operations are now not allowed if input vectors do not follow this convention.
+# Formally, vectors are thought of as column vectors, i.e. a matrix with one column and $n$ number of rows (for each element of the vector). So a vector should be represented as a column inside of a 2d structure. Some operations are now not allowed if input vectors do not follow this convention.
 # 
 # When you come across certain operations written in mathematical notation, it can be confusion as to what the author means by a particular operation. For example, it is obvious to most people what is mean by:
 # 

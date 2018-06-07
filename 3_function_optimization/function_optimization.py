@@ -609,7 +609,7 @@ ax.view_init(25, 55)
 # ![coolfunction](https://github.com/paulegradie/ML_bookclub/blob/master/3_function_optimization/images/cool_function.png "x^2-y^2")
 
 
-# Gradient descent will give us the directins we need to descend, however in order to gain information about the importance of each step, we need the second dirivatives of our function. this is the derivative of the derivative and the matrix of second derivatives (derived from the jacobian) is referred to as the Hessian.
+# Gradient descent will give us the directions we need to descend, however in order to gain information about the importance of each step, we need the second dirivatives of our function. this is the derivative of the derivative and the matrix of second derivatives (derived from the jacobian) is referred to as the Hessian.
 # 
 # We don't really need to go beyond this point, but its useful to know that optimization strategies that make use of the Hessian take advantage of directional importance which can be useful for speeding up optimization and avoiding critical points such as saddle points.
 # 
