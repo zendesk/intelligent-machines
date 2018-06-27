@@ -423,8 +423,6 @@ b
 
 # Cool, it works!
 # 
-# #### Warning - some heavy math below
-# 
 # Now, to find the vector $x$ that minimizes the ouput of this function, we compute the gradient, and then step the input vector in the appropriate direction. So the first thing to do here is to compute the gradient by finding the function that outputs the partial derivatives of the original function.
 # 
 # Deriving gradients can seem like a bit of a leap because at this point we probably aren't too comfortable with manipulating the notation. Thats okay! We'll show how this is derived just so we aren't causing any unexplainable leaps in information. But don't worry too much about this - its meerly here to show that it can be done.
@@ -433,52 +431,13 @@ b
 
 # $$f(x) = \frac{1}{2}||Ax − b||^2$$
 # 
-# The leading $\frac{1}{2}$ is simply a scaling factor, so we can ignore this.
+# To compute the gradient, we can use the chain rule to quickly derive the derivative of this function, which is summarized as: Derviative of outside multiplied by derivative of inside.
 # 
-# $ = (Ax − b)^2$
+# $$\bigtriangledown f(x)= \frac{dy}{du}\frac{du}{dx}$$
 # 
-# $ = (Ax-b)^\top(Ax-b)$
+# $$ =  \frac{2}{2}||Ax - b||^1 *  \frac{du}{dx}$$
 # 
-# $ = ((Ax)^\top-b^\top)(Ax-b)$
-# 
-# $ = (A^\top x^\top - b^\top)(Ax-b)$
-# 
-# $ = (x^\top A^\top A - x) - (b^\top Ax) - (x^\top A^\top b) + (b^\top b)$
-# 
-# 
-# From here we isolate the terms.
-# 
-# $f(x)_1 = x^\top A^\top A - x$
-# 
-# $f(x)_2 = b^\top Ax  \leftarrow (scalar)$
-# 
-# $f(x)_3 = x^\top A^\top b$
-# 
-# $f(x)_4 = b^\top b  \leftarrow (scalar)$
-
-# Now we find the partial derivatives. In other words, we find the derivative for each of these functions by setting each other term to zero.
-# 
-# $$gradient = [\bigtriangledown f(x)]_p = \frac{\partial f}{\partial x_p}$$
-# 
-# So the gradient in this case is defined as the partial derivitives of the function f with respect to the input variables $x$. So anytime there is no x in the function, the gradient will be zero. 
-# 
-# Thus...
-# 
-# 
-# $$ \bigtriangledown f(x)_1 = \frac{\partial f_1}{\partial x_p} = A^\top Ax $$
-# 
-# $$ \bigtriangledown f(x)_2 = \frac{\partial f_2}{\partial x_p} = 0         $$
-# 
-# $$ \bigtriangledown f(x)_3 = \frac{\partial f_3}{\partial x_p} = A^\top b  $$ 
-# 
-# $$ \bigtriangledown f(x)_4 = \frac{\partial f_4}{\partial x_p} = 0         $$
-# 
-# Recombining the partial derivatives yeilds the function:
-# 
-# $$\bigtriangledown f(x) =  A^\top Ax - A^\top b$$
-# 
-# So to summarize:
-# $$\bigtriangledown_x  f(\frac{1}{2}||Ax − b||^2) = A^\top Ax-A^\top b$$
+# $$ = (Ax - b) * A $$ 
 
 # The reason this works out is because the matrix A is a matrix of coefficients that corespond to a linear function. The derivative of a linear function is the value of the coefficients.
 # 
@@ -502,43 +461,45 @@ print(x)
 
 
 ## This code will not run
+try:
+    epochs = 50000
+    lr = 0.00001
+    batch_size = 5
+    input_size = 13
+    hidden_size = 10
+    samples_seen = 0
 
-epochs = 50000
-lr = 0.00001
-batch_size = 5
-input_size = 13
-hidden_size = 10
-samples_seen = 0
+    # f(x)_1
+    parameteres_hidden_matrix = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
 
-# f(x)_1
-parameteres_hidden_matrix = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
+    # f(x)_2
+    parameters_output_matrix = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
 
-# f(x)_2
-parameters_output_matrix = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
+    # Train the network
+    for each_epoch in range(epochs):
+        batched_data = data_batcher(boston.data, boston.target, batch_size=batch_size)
+        epoch_loss = 0
 
-# Train the network
-for each_epoch in range(epochs):
-    batched_data = data_batcher(boston.data, boston.target, batch_size=batch_size)
-    epoch_loss = 0
-    
-    for batch_input, batch_target in batched_data:
+        for batch_input, batch_target in batched_data:
 
-        samples_seen += 1 * batch_size
+            samples_seen += 1 * batch_size
 
-        # Forward Pass
-        hidden_layer_out = np.dot(batch_input, parameteres_hidden_matrix) # No activation function
-        pred = np.dot(hidden_layer_out, parameters_output_matrix) # No activation function
+            # Forward Pass
+            hidden_layer_out = np.dot(batch_input, parameteres_hidden_matrix) # No activation function
+            pred = np.dot(hidden_layer_out, parameters_output_matrix) # No activation function
 
-        # loss
-        epoch_loss += loss_function(pred, batch_target)
+            # loss
+            epoch_loss += loss_function(pred, batch_target)
 
-        # backprop
-        l2_gradient_vector = loss_function_deriv(pred, batch_target) # No derivative
-        l1_gradient_vector = np.dot(l2_gradient_vector, parameters_output_matrix.T)  # No derivative since no nonlinear activation!
+            # backprop
+            l2_gradient_vector = loss_function_deriv(pred, batch_target) # No derivative
+            l1_gradient_vector = np.dot(l2_gradient_vector, parameters_output_matrix.T)  # No derivative since no nonlinear activation!
 
-        # gradient descent
-        parameters_output_matrix += np.dot(hidden_layer_out.T, l2_gradient_vector) * lr
-        parameteres_hidden_matrix += np.dot(batch_input.T, l1_gradient_vector) * lr
+            # gradient descent
+            parameters_output_matrix += np.dot(hidden_layer_out.T, l2_gradient_vector) * lr
+            parameteres_hidden_matrix += np.dot(batch_input.T, l1_gradient_vector) * lr
+except:
+    pass
 
 
 # 
@@ -646,4 +607,54 @@ for title, func, ax in zip(titles, funcs, axes.flatten()):
 
 np.random.normal(0.0, 0.01, (5, 4))
 
+
+# # Bonus content: Deriving the gradient of sum of squares
+
+# 
+# The leading $\frac{1}{2}$ is simply a scaling factor, so we can ignore this.
+# 
+# $ = (Ax − b)^2$
+# 
+# $ = (Ax-b)^\top(Ax-b)$
+# 
+# $ = ((Ax)^\top-b^\top)(Ax-b)$
+# 
+# $ = (A^\top x^\top - b^\top)(Ax-b)$
+# 
+# $ = (x^\top A^\top A - x) - (b^\top Ax) - (x^\top A^\top b) + (b^\top b)$
+# 
+# 
+# From here we isolate the terms.
+# 
+# $f(x)_1 = x^\top A^\top A - x$
+# 
+# $f(x)_2 = b^\top Ax  \leftarrow (scalar)$
+# 
+# $f(x)_3 = x^\top A^\top b$
+# 
+# $f(x)_4 = b^\top b  \leftarrow (scalar)$
+# 
+# Now we find the partial derivatives. In other words, we find the derivative for each of these functions by setting each other term to zero.
+# 
+# $$gradient = [\bigtriangledown f(x)]_p = \frac{\partial f}{\partial x_p}$$
+# 
+# So the gradient in this case is defined as the partial derivitives of the function f with respect to the input variables $x$. So anytime there is no x in the function, the gradient will be zero. 
+# 
+# Thus...
+# 
+# 
+# $$ \bigtriangledown f(x)_1 = \frac{\partial f_1}{\partial x_p} = A^\top Ax $$
+# 
+# $$ \bigtriangledown f(x)_2 = \frac{\partial f_2}{\partial x_p} = 0         $$
+# 
+# $$ \bigtriangledown f(x)_3 = \frac{\partial f_3}{\partial x_p} = A^\top b  $$ 
+# 
+# $$ \bigtriangledown f(x)_4 = \frac{\partial f_4}{\partial x_p} = 0         $$
+# 
+# Recombining the partial derivatives yeilds the function:
+# 
+# $$\bigtriangledown f(x) =  A^\top Ax - A^\top b$$
+# 
+# So to summarize:
+# $$\bigtriangledown_x  f(\frac{1}{2}||Ax − b||^2) = A^\top Ax-A^\top b$$
 

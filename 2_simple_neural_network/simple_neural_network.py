@@ -90,6 +90,10 @@ def data_batcher(inputs, targets, batch_size=5):
 
 # #### Define a loss function
 
+# ### Implement a linear network
+
+# ![image.png](attachment:image.png)
+
 
 
 def loss_function(pred, targ):
@@ -101,8 +105,6 @@ def loss_function(pred, targ):
 def loss_function_deriv(pred, targ):
     return (targ - pred)
 
-
-# ### Implement a linear network
 
 
 
@@ -123,6 +125,7 @@ samples_seen = 0
 hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
 output_weights = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
 
+loss, epoch_list = list(), list()
 # Train the network
 for each_epoch in range(epochs):
     
@@ -150,14 +153,23 @@ for each_epoch in range(epochs):
         hidden_weights += np.dot(batch_input.T, l1delta) * lr
 
     if each_epoch % 5000 == 0:
-        print("epoch {} ... loss: {} ... samples seen: {}".format(each_epoch, round(epoch_loss, 2), samples_seen))
+        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
+        loss.append(epoch_loss)
+        epoch_list.append(each_epoch)
+
+
+
+
+plt.plot(epoch_list, loss)
+plt.xlabel('epoch'), plt.ylabel('loss'), plt.title("Loss");
 
 
 # ## Implement a non-linear network
 
 
 
-def sigmoid(x):  # Non-linearity
+# non linear activation function and its derivative
+def sigmoid(x):
     return 1. / (1 + np.exp(-x))
 
 def sigmoid_deriv(x):
@@ -182,6 +194,8 @@ hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
 output_weights = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
 
 samples_seen = 0
+loss, epoch_list = list(), list()
+
 # Train the network
 for each_epoch in range(epochs):
     
@@ -208,7 +222,9 @@ for each_epoch in range(epochs):
         hidden_weights += np.dot(batch_input.T, l1delta) * lr
 
     if each_epoch % 5000 == 0:
-        print("epoch {} ... loss: {} ... samples seen: {}".format(each_epoch, round(epoch_loss, 2), samples_seen))
+        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
+        loss.append(epoch_loss)
+        epoch_list.append(each_epoch)
 
 
 # #### Create a layer class and do it again
@@ -235,7 +251,7 @@ class Layer(object):
                         None: self.non_activation}
 
         derivs = {'sigmoid': self.sigmoid_deriv,
-                  'relu': self.relu_driv,
+                  'relu': self.relu_deriv,
                    None: self.non_activation_deriv}
 
 
@@ -267,10 +283,10 @@ class Layer(object):
         return 1
     
     def relu(self, x):
-        return 0 if x <= 0 else x
+        return max(0, x)
     
     def relu_deriv(self, x):
-        return 1
+        return max(0, x)
 
 
 
@@ -284,10 +300,11 @@ batch_size = 5
 
 
 # init layers
-hidden_layer = Layer(input_dim=13, output_dim=10, learning_rate=lr, name='hidden_layer')
-output_layer = Layer(input_dim=10, output_dim=1, learning_rate=lr, name='output_layer')
+hidden_layer = Layer(input_dim=13, output_dim=35, learning_rate=lr, name='hidden_layer')#, activation='relu')
+output_layer = Layer(input_dim=35, output_dim=1, learning_rate=lr, name='output_layer')
 
 samples_seen = 0
+loss, epoch_list = list(), list()
 
 # Train the network
 for each_epoch in range(epochs):
@@ -316,8 +333,12 @@ for each_epoch in range(epochs):
         hidden_layer.update_weights()
 
     if each_epoch % 5000 == 0:
-        print("epoch {} ... loss: {} ... samples seen: {}".format(each_epoch, round(epoch_loss, 2), samples_seen))
+        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
+        loss.append(epoch_loss)
+        epoch_list.append(each_epoch)
 
+
+# ## Visualizing the weights of the network
 
 
 
@@ -335,4 +356,14 @@ for ix, (layer, ax) in enumerate(zip(layers, axs.flatten())):
     else:
         sns.distplot(layer, ax=ax);
 
+
+# # Summary
+
+# There is a quite a bit we can do to improve the results we obtained in this tutorial, and we've covered only some of most basic techniques involved with implementing a neural network from scratch.
+# 
+# Ideas to explore are:
+#  - normalizing the data during preprocessing
+#  - the consequence of using different types of activation functions
+#  - activation function saturation (see optimzation notbook)
+#  - unwanted variable correlation (linear dependance across columns)
 

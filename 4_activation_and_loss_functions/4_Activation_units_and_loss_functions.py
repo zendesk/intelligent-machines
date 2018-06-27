@@ -384,7 +384,7 @@ neg_log(0.02)
 neg_log(0.99)
 
 
-# ## Try for yourself: How to approximate the Support Vector Machine (easy)
+# ## Try for yourself: How to approximate the Support Vector Machine
 
 # Lets say we want to approximate a support vector machine. As a project, see if you can implement a neural network that has the necessary activation functions, outputs, and loss function to approximate this function. How would you implement a linear SVM? How would you implement a kernalized SVM?
 

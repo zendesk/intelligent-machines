@@ -213,6 +213,15 @@ inputs.shape
 np.dot(inputs.T, X)
 
 
+
+# Neural networks use transformation matrices to map input variables to hidden state representations. So we have the familiar image:
+# 
+# ![image.png](attachment:image.png)
+
+# The arrows connecting the input circles to the hidden (blue) circles represent the tranformation matrix. So the shape of this matrix would be the number of input circles by the number of hidden circles. In the case above, the matrix would be shape [3, 4]. The columns of this matrix thus represent the nodes of the hidden layer, and to perform the matrix operation, we perform a linear combination with the values of the first column (for the first node of the layer) with the inputs and output the sum of the terms. We do the same thing with each successive column of the weight matrix - we perform a linear combination of the inputs and the column that represents the hidden node. 
+# 
+# When we talk about the output of each node, we are talking about the result of each linear combination of the input vector and that node's column of the weight matrix.
+
 # ## Keep in mind: Matrix multiplication is associative, but NOT cummutative
 # 
 # When debugging and working out matrix multiplication, remember that the order of the vectors and matrices matter.
