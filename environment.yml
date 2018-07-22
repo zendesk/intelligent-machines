@@ -1,0 +1,10 @@
+name: intelligent-machines
+
+dependencies:
+  - python=3.6
+  - jupyterlab
+  - numpy
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - pandas
