@@ -15,6 +15,8 @@ In this notebook, we talk about what it means to approximate a function and how 
 
 # Getting Started
 
+## Running the notebooks locally
+
 In these tutorials, we will be building and running a neural network in Python as well as using code to illustrate how the components of a neural net work. 
 
 We will install and manage Python using [Miniconda](https://conda.io/miniconda.html) and run Python code in [JupyterLab](https://github.com/jupyterlab/jupyterlab) an interactive coding environment. This section will guide you through installing Miniconda and JupyterLab so that you can run the tutorial notebooks on your own computer. 
@@ -51,3 +53,7 @@ jupyter lab
 ```
 
 This will launch a browser window with your Jupyter Lab session!
+
+## Run the notebooks on Google Colaboratory
+
+If you'd like to run the notebooks without installing anything on your machine, another option is to open them with [Google Colaboratory](https://colab.research.google.com/) by pasting in the link to a notebook from github e.g. ```https://github.com/zendesk/intelligent-machines/blob/master/2_simple_neural_network/simple_neural_network.ipynb```
