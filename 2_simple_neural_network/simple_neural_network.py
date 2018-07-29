@@ -105,7 +105,7 @@ batch_size = 25
 samples_seen = 0
 progress = list()
 
-use_nonlinearity = False
+use_nonlinearity = True
 
 # Set learnable weight matrices
 hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(n_input_features, hidden_size))
