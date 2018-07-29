@@ -1,25 +1,42 @@
 
 # coding: utf-8
 
-# # A simple neural network
+# # A simple feed forward neural network
 
-# Neural networks are amazing. When used well, they seem simulate intellegent behavior to accomplish a wide variety of tasks ranging from image recognition to image generation, from language comprehension to language translation, and much more. The thing about neural networks, though, is that they are typically designed with a specific task in mind. 
+# Neural networks are amazing. When properly constructed, they can be used to perform specific tasks such as image recognition and language translation. They are complex machines however, grounded in mathematics and require diligent tuning efforts to get right. Typically, neural networks are designed with a specific task in mind, and the network architecture reflects characteristics of the problem.
 # 
-# Clever people have been spent a lot of time trying to discover ways to implement neural networks in order to optimize for specific tasks. This has lead to the discovery of a wide diversity of architectures that tend to be suited for their specific tasks. You may be familiar with some of these architectures. One such artchitecture is the convolutional nerual network (ConvNet). Another is the recurrent neural network (RNN). ConvNets tend to be suited for image recognition tasks, whereas RNNs tend to perform well on sequence based tasks, such as language processing.
+# The search for architectures suitable for specific tasks is an ongoing one, however you may be familiar with some of the architectures that have been discovered so far. One such architecture is the convolutional neural network (ConvNet). Another is the recurrent neural network (RNN). ConvNets have enjoyed much success in the domain of image recognition, where a characteristic of the problem is the correlative nature of pixel values when forming images, whereas RNNs tend to perform well on sequence based tasks, where signal is embedded in the order of sequence elements.
 # 
-# The simplest kind of neural network is called a feed forward network, which is what we'll focus on in this notebook. When you break down some of the more advanced architectures, it becomes apparent that they are basically just clever ways to combine various feed forward networks that use the same mathematical operations we'll learn about by building a feed forward network. For example, the LSTM architecture uses a system of feed forward networks to gate information as it passes through the network.
+# The simplest kind of neural network is called a restricted bolztmann machine, also called the feed-forward network, which is what we'll focus on in this notebook. When you break down some of the more advanced architectures, it becomes apparent that they are basically just clever ways to combine various feed-forward networks that use the same mathematical operations we'll learn about by building a simple feed-forward network.
 # 
-# So using our understanding of vector and matrix operations, lets implement a feed forward network from scratch using numpy!
+# So using our understanding of vector and matrix operations, let's implement a feed-forward network from scratch using numpy!
 
-# ### The feed forward network 
-# 
-# Any neural network needs to be designed around a task. In the previous session we talked about some of the mathematical operations that occur inside a feed forward network, but haven't talked about any of the operations that happen on either end.
-# 
-# On the input end, we typically need to consider getting our data cleaned and organized in such a way that that we can feed it in as a vector. On the other end, we need to pose the learning task in the form of a loss function, the goal that we are optimizing for.
+# ## What we'll cover
 
-# We will use a standard dataset that does not require much preprocessing and we'll choose a simple loss function that doesn't require much work to understand for now. We can focus on these things in a later session. Input preprocessing tends to be different for each network you create, and loss functions will be discussed when we cover the the training process in greater depth.
+#  - how to build a simple neural network to approximate a mathematical function
+#  - explore the limitations of a purely linear network
+#  - explore how using non-linear functions in the network all us to model non-linear mathematical functions
+#  - how to set up some data for training
+#  - how to implement the forward pass of a neural network
+#  - how to predict housing prices using a NN
 # 
-# How can we implement a feed forward network without understanding how to train it? We can't! We'll gloss over backpropogation in this session and save that for the next session.
+# #### and if we have time:
+#  - how modern NN libraries attempt to abstract layers by implementing a layer class
+#  - how we can implement a NN using keras
+#  - how we can implement a NN using TF
+
+# #### What we'll gloss over
+
+# We won't spend too much time discussing the mechanics of training; backpropogation and gradient descent. This will be covered in the next session.
+
+# ### The operations at the ends of the network
+# 
+# 
+# Neural networks essentially learn to generalize a data distribution, so to train a network we need some input data and the target distribution. On the input end of the network, we typically need to consider getting our data cleaned and organized in such a way that that we can feed it in as a vector (but as a single row in a 2d matrix). On the other end of the network (i.e. the output end), we need a loss function to compute the loss and drive the network towards the goal that we'd like to  optimize for.
+
+# #### The data
+
+# For this tutorial, we will use a standard dataset that does not require much preprocessing. This is to keep things as simple as possible. We can focus on these things in a later session. Input preprocessing tends to be different for each network you create, and loss functions will be discussed when we cover the the training process in greater depth.
 
 # #### Imports
 
@@ -27,15 +44,124 @@
 
 import numpy as np
 from sklearn.datasets import load_boston
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+
 import pandas as pd
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+get_ipython().run_line_magic('matplotlib', 'inline')
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
+# ### Implement a purely linear network
+# 
+# Neural networks devoid of non-linear funcitons can, at best, model linear functions. For a  
+
+# #### Define a few helper functions
+
+
+
+def batch_data_gen(batch_size):
+    " Generate inputs and outputs in batches "
+    xs = np.random.randint(-10, 10, size=[batch_size, 1]).astype(np.float32)
+    ys = (xs ** 2).astype(np.float32)
+    return xs, ys
+
+def loss_function(pred, targ):
+    return 0.5 * np.sum((pred - targ)**2)
+
+def loss_function_deriv(pred, targ):
+    return (pred - targ)
+
+def logistic(x, use=True, deriv=False):
+    if use:
+        if deriv is True:
+            return x * (1 - x)
+        return 1./(1. + np.exp(-x))
+    else:
+        return x if deriv is False else 1 #return 1 if computing the deriv (same as removing)
+
+def predict(x, use_nonlinearity, hidden_weights, output_weights, hidden_bias, output_bias):
+    out = logistic(np.dot(x, hidden_weights) + hidden_bias, use=use_nonlinearity)
+    pred = np.dot(out, output_weights) + output_bias
+    return pred
+
+
+# #### Fit the data to approximate $f(x) = x^2$ using a linear network
+# 
+# We can flip the 'use' switch in the logistic function and its derivative to see what happens when we have non-linearities in the network vs not having non-linearities.
+
+
+
+lr = 0.0001
+num_iterations = 15000
+n_input_features = 1
+hidden_size = 32
+batch_size = 25
+samples_seen = 0
+progress = list()
+
+use_nonlinearity = False
+
+# Set learnable weight matrices
+hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(n_input_features, hidden_size))
+hidden_bias = np.zeros((1, hidden_size))
+
+output_weights = np.random.normal(loc=0.0, scale=0.01, size=(hidden_size, 1))  # a single output!
+output_bias = np.zeros((1, 1))
+
+losses = list()
+
+# Train the network
+for _ in range(num_iterations):
+    xs, ys = batch_data_gen(batch_size)
+    samples_seen += 1 * batch_size
+
+    # Forward Pass
+    hidden_layer_out = logistic(np.dot(xs, hidden_weights) + hidden_bias, use=use_nonlinearity)
+    pred = np.dot(hidden_layer_out, output_weights) + output_bias
+
+    # error
+    err = loss_function(pred, ys)
+    losses.append(np.sum(err))
+
+    # backprop
+    out_delta = loss_function_deriv(pred, ys) # pred - ys
+    hidden_delta = np.dot(out_delta, output_weights.T) * logistic(hidden_layer_out, use=use_nonlinearity, deriv=True)
+
+    # gradient descent - use minus-equals due to order of (pred - ys), if switched (ys - pred), use plus-equals
+    output_weights -= np.dot(hidden_layer_out.T, out_delta) * lr
+    output_bias -= np.sum(out_delta, axis=0) * lr
+
+    hidden_weights -= np.dot(xs.T, hidden_delta) * lr
+    hidden_bias -= np.sum(hidden_delta, axis=0) * lr
+
+    if _ % 500 == 0:
+        print(f"Current batch loss: {round(losses[-1], 2)} ... samples seen: {samples_seen}")
+        x = np.linspace(-9, 9, 30).reshape(-1, 1)
+        progress.append(predict(x, use_nonlinearity, hidden_weights, output_weights, hidden_bias, output_bias))
+
+# Print out a cool plot of the learning progress
+x = np.linspace(-9, 9, 30).reshape(-1, 1)
+fig, axes = plt.subplots(ncols=5, nrows=3, figsize=(15,12))
+step = 0
+for out, ax, los in zip(progress, axes.flatten(), losses):
+    ax.plot(x, x **2, alpha=0.3)
+    ax.scatter(x, out)
+    ax.set_title('Step: {}\nloss: {}'.format(str(step), str(round(los, 2))))
+    step += 1000
+plt.tight_layout()
+
+
+# ## Use a neural network to approximate a regression function that predicts housing prices
 
 # #### Load the dataset
 # 
-# For this network, we'll use the boston housing dataset. The goal for this dataset is to learn a model that helps us predict the median market value of the house based on features gathered assocated with the property. This is idea for a simple neural network since we want to use a simple loss function. Since we're predicting a price, we can frame this as a regression problem and use a sum of squares loss function.
+# For this network, we'll use the Boston housing dataset. The goal for this dataset is to learn a model that helps us predict the median market value of the house based on features gathered associated with the property. This is ideal for a simple neural network since we want to use a simple loss function. Since we're predicting a price, we can frame this as a regression problem and use a sum of squares loss function.
 
 
 
@@ -46,6 +172,11 @@ boston = load_boston(return_X_y=False)
 
 print(boston.DESCR)
 
+
+# #### Note for those who are wondering about the race based feature
+# This appears to be a controversial feature related to race in the context of a toy dataset where we would like to perform regression. The original purpose of this feature was to rule out race as a confounding factor in the original study. For perspective on both sides of the debate as to whether or not this should be included, you can follow up by reading: https://mail.python.org/pipermail/scikit-learn/2017-July/001683.html
+# 
+# Since this tutorial does not require this feature, we will exclude it.
 
 # #### Visualize the data
 
@@ -63,287 +194,155 @@ boston.target
 
 df = pd.DataFrame(boston.data, columns=['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX',
                                         'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO',
-                                        'B', 'LSTAT'])
+                                        'B', 'LSTAT']).drop('B', axis=1)
 df.loc[:, 'target'] = boston.target
 df.head()
 
 
-# With any dataset, there is the opportunity to explore the data to find feature that are going to likely be the most helpful when training the model. This is the case for any model and it is generally recommended. Since we're focusing on the network implementation, we'll skip the data exploration for now. 
+# With any dataset, there is the opportunity to explore the data to find features that are going to likely be the most helpful when training the model. There are a variety of techniques available to do this and it is generally recommended. However, since we're focusing on the network implementation, we'll skip the data exploration for now. 
 
 # #### Define a data batcher
-# When we send data through the network, we can send samples through one at a time or in batches. So its useful to have a function that handle that for us.
+# When we send data through the network, we can send samples through one at a time or in batches. So it's useful to have a function that handles that for us.
+
+# #### Fit
 
 
 
-def data_batcher(inputs, targets, batch_size=5):
-    assert len(inputs) == len(targets)
+def data_batcher(input_df, batch_size=5):    
+    " Create some batches of data for training "
+
+    inputs = input_df.drop('target', axis=1).values
+    targets = input_df['target'].values
+
+    # split_data
+    X_train, X_test, y_train, y_test = train_test_split(inputs, targets, test_size=0.2, random_state=42)
+
+    # reshape to batch dims
+    train_cutoff = (len(X_train) % batch_size)
+    test_cutoff = (len(X_test) % batch_size)
+
+    train_x_batches = X_train[: -train_cutoff].reshape(-1, batch_size, X_train.shape[1])
+    train_y_batches = y_train[: -train_cutoff].reshape(-1, batch_size, 1)
+    test_x_batches  = X_test[ : -test_cutoff].reshape(-1, batch_size, X_test.shape[1])
+    test_y_batches  = y_test[ : -test_cutoff].reshape(-1, batch_size, 1)
     
-    inputs = inputs[: -(len(inputs) % batch_size)].reshape(-1, batch_size, inputs.shape[1])
-    targets = targets[: -(len(targets) % batch_size)].reshape(-1, batch_size)
+    assert len(train_x_batches) == len(train_y_batches)
+    assert len(test_x_batches) == len(test_y_batches)
     
-    batched_data = list()
-    for x_inputs, y_targets in zip(inputs, targets):
-        batched_data.append([x_inputs, y_targets.reshape(-1, 1)])
-    
-    return batched_data
+    batched_input_data = zip(train_x_batches, train_y_batches)
+    batched_test_data = zip(test_x_batches, test_y_batches)
 
-
-# #### Define a loss function
-
-# ### Implement a linear network
-
-# ![image.png](attachment:image.png)
-
-
-
-def loss_function(pred, targ):
-    return 0.5 * np.sum((targ - pred)**2)
+    return batched_input_data, batched_test_data
 
 
 
 
-def loss_function_deriv(pred, targ):
-    return (targ - pred)
-
-
-
-
-# Set how many times to iterate through the dataset
-epochs = 50000
-
-# Set hyperparamters
-lr = 0.00001
-batch_size = 5
-
-#Set dimensions of hidden layer
-input_size = 13
-hidden_size = 10
-
+lr = 0.000001
+n_input_features = 12
+hidden_size = 128
+batch_size = 25
 samples_seen = 0
+progress = list()
+epochs = 50
+
+epoch_loss = list()
+eps = list()
+
+use_nonlinearity = False
 
 # Set learnable weight matrices
-hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
-output_weights = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
+hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(n_input_features, hidden_size))
+hidden_bias = np.zeros((1, hidden_size))
 
-loss, epoch_list = list(), list()
-# Train the network
+output_weights = np.random.normal(loc=0.0, scale=0.01, size=(hidden_size, 1))  # a single output!
+output_bias = np.zeros((1, 1))
+
+# Train the network - need epochs to go through data multiple times
 for each_epoch in range(epochs):
-    
-    #create
-    batched_data = data_batcher(boston.data, boston.target, batch_size=batch_size)
-    epoch_loss = 0
+
+    losses = list()
+
+    batched_data, _ = data_batcher(df, batch_size=batch_size)
     
     for batch_input, batch_target in batched_data:
-
         samples_seen += 1 * batch_size
 
         # Forward Pass
-        hidden_layer_out = np.dot(batch_input, hidden_weights) # No activation function
-        pred = np.dot(hidden_layer_out, output_weights) # No activation function
+        hidden_layer_out = logistic(np.dot(batch_input, hidden_weights) + hidden_bias, use=use_nonlinearity)
+        pred = np.dot(hidden_layer_out, output_weights) + output_bias
 
-        # loss
-        epoch_loss += loss_function(pred, batch_target)
-
-        # backprop
-        l2delta = loss_function_deriv(pred, batch_target) # No derivative
-        l1delta = np.dot(l2delta, output_weights.T)  # No derivative since no nonlinear activation!
-
-        # gradient descent
-        output_weights += np.dot(hidden_layer_out.T, l2delta) * lr
-        hidden_weights += np.dot(batch_input.T, l1delta) * lr
-
-    if each_epoch % 5000 == 0:
-        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
-        loss.append(epoch_loss)
-        epoch_list.append(each_epoch)
-
-
-
-
-plt.plot(epoch_list, loss)
-plt.xlabel('epoch'), plt.ylabel('loss'), plt.title("Loss");
-
-
-# ## Implement a non-linear network
-
-
-
-# non linear activation function and its derivative
-def sigmoid(x):
-    return 1. / (1 + np.exp(-x))
-
-def sigmoid_deriv(x):
-    return x * (1. - x)
-
-
-
-
-# Set how many times to iterate through the dataset
-epochs = 50000
-
-# Set hyperparamters
-lr = 0.00001
-batch_size = 5
-
-#Set dimensions of hidden layer
-input_size = 13
-hidden_size = 10
-
-# Set learnable weight matrices
-hidden_weights = np.random.normal(loc=0.0, scale=0.01, size=(13, 10))
-output_weights = np.random.normal(loc=0.0, scale=0.01, size=(10, 1))  # a single output!
-
-samples_seen = 0
-loss, epoch_list = list(), list()
-
-# Train the network
-for each_epoch in range(epochs):
-    
-    #create
-    batched_data = data_batcher(boston.data, boston.target, batch_size=batch_size)
-    epoch_loss = 0
-    
-    for batch_input, batch_target in batched_data:
-        samples_seen += 1 * batch_size
-        
-        # Forward pass
-        hidden_layer_out = sigmoid(np.dot(batch_input, hidden_weights))
-        pred = np.dot(hidden_layer_out, output_weights) # No activation function
-
-        # loss
-        epoch_loss += loss_function(pred, batch_target)
+        # error
+        err = loss_function(pred, batch_target)
+        losses.append(np.sum(err))
 
         # backprop
-        l2delta = loss_function_deriv(pred, batch_target) * 1
-        l1delta = np.dot(l2delta, output_weights.T)  * sigmoid_deriv(hidden_layer_out)
+        out_delta = loss_function_deriv(pred, batch_target) # pred - ys
+        hidden_delta = np.dot(out_delta, output_weights.T) * logistic(hidden_layer_out, use=use_nonlinearity, deriv=True)
 
-        # gradient descent
-        output_weights += np.dot(hidden_layer_out.T, l2delta) * lr
-        hidden_weights += np.dot(batch_input.T, l1delta) * lr
+        # gradient descent - use minus-equals due to order of (pred - ys), if switched (ys - pred), use plus-equals
+        output_weights -= np.dot(hidden_layer_out.T, out_delta) * lr
+        output_bias -= np.sum(out_delta, axis=0) * lr
 
-    if each_epoch % 5000 == 0:
-        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
-        loss.append(epoch_loss)
-        epoch_list.append(each_epoch)
+        hidden_weights -= np.dot(batch_input.T, hidden_delta) * lr
+        hidden_bias -= np.sum(hidden_delta, axis=0) * lr
 
+    if each_epoch % 5 == 0:
+        print('batch_loss: {}'.format(loss_function(pred, batch_target)))
 
-# #### Create a layer class and do it again
-
-
-
-class Layer(object):
-    
-    def __init__(self, 
-                 input_dim,
-                 output_dim,
-                 learning_rate,
-                 name,
-                 activation=None):
-
-        self.weights = np.random.normal(0.0, 0.01, (input_dim, output_dim))
-        self.name = name
-        self.learning_rate = learning_rate
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-
-        activations = {'sigmoid': self.sigmoid,
-                       'relu': self.relu,
-                        None: self.non_activation}
-
-        derivs = {'sigmoid': self.sigmoid_deriv,
-                  'relu': self.relu_deriv,
-                   None: self.non_activation_deriv}
-
-
-        self.activation = activations[activation]
-        self.activation_deriv = derivs[activation]
-
-    def forward_pass(self, input_x):
-        self.input = input_x
-        self.output = self.activation(np.dot(self.input, self.weights))
-        return self.output
-
-    def backward_pass(self, output_delta):
-        self.weight_output_delta = output_delta * self.activation_deriv(self.output)
-        return np.dot(self.weight_output_delta, self.weights.T)
-
-    def update_weights(self):
-        self.weights += np.dot(self.input.T, self.weight_output_delta) * self.learning_rate
-
-    def sigmoid(self, x):
-        return 1. / (1 + np.exp(-x))
-
-    def sigmoid_deriv(self, x):
-        return x * (1. - x)
-    
-    def non_activation(self, x):
-        return x
-    
-    def non_activation_deriv(self, x):
-        return 1
-    
-    def relu(self, x):
-        return max(0, x)
-    
-    def relu_deriv(self, x):
-        return max(0, x)
+    if each_epoch % 1 == 0:
+        epoch_loss.append(loss_function(pred, batch_target))
+        eps.append(each_epoch)
 
 
 
 
-# Set how many times to iterate through the dataset
-epochs = 50000
-
-# Set hyperparamters
-lr = 0.00001
-batch_size = 5
+plt.plot(eps, epoch_loss)
+plt.xlabel('step'), plt.ylabel('loss'), plt.title("Loss");
+# plt.ylim((0, 50000))
+plt.xlim((0, 50))
 
 
-# init layers
-hidden_layer = Layer(input_dim=13, output_dim=35, learning_rate=lr, name='hidden_layer')#, activation='relu')
-output_layer = Layer(input_dim=35, output_dim=1, learning_rate=lr, name='output_layer')
+# #### Test
 
-samples_seen = 0
-loss, epoch_list = list(), list()
 
-# Train the network
-for each_epoch in range(epochs):
 
-    #create batches
-    batched_data = data_batcher(boston.data, boston.target, batch_size=batch_size)
+test_error = list()
+residuals = list()
+y_true = list()
+predictions = list()
+_, batched_test_data = data_batcher(df, batch_size=batch_size)
 
-    epoch_loss = 0
-    for batch_input, batch_target in batched_data:
-        samples_seen += 1 * batch_size
+for x, y in batched_test_data:
+    y_true.append(y)
+    prediction = predict(x, use_nonlinearity, hidden_weights, output_weights, hidden_bias, output_bias)
+    predictions.append(prediction)
+    test_error.append(loss_function(prediction, y))
 
-        # Forward pass
-        hidden_out = hidden_layer.forward_pass(batch_input)
-        pred = output_layer.forward_pass(hidden_out)
+print('Average sample error: {}'.format(np.mean(np.vstack(test_error))))
 
-        # loss
-        epoch_loss += loss_function(pred, batch_target)
 
-        # backprop
-        output_delta = loss_function_deriv(pred, batch_target)
-        hidden_delta = output_layer.backward_pass(output_delta)
-        hidden_layer.backward_pass(hidden_delta)
+# #### Residuals
 
-        # gradient descent
-        output_layer.update_weights()
-        hidden_layer.update_weights()
 
-    if each_epoch % 5000 == 0:
-        print(f"epoch {each_epoch} ... loss: {round(epoch_loss, 2)} ... samples seen: {samples_seen}")
-        loss.append(epoch_loss)
-        epoch_list.append(each_epoch)
+
+plt.scatter(np.vstack(y_true), np.vstack(y_true) - np.vstack(predictions))
+plt.axhline(0);
+plt.axvline(0);
+
+
+# #### $R^2$ result
+
+
+
+r2_score(np.vstack(y_true), np.vstack(predictions))
 
 
 # ## Visualizing the weights of the network
 
 
 
-layers = [hidden_layer.weights, output_layer.weights,
-          hidden_layer.weights.flatten(), output_layer.weights.flatten()]
+layers = [hidden_weights, output_weights,
+          hidden_weights.flatten(), output_weights.flatten()]
 
 fig, axs = plt.subplots(figsize=(18, 12), nrows=2, ncols=2)
 bar = False
@@ -357,6 +356,36 @@ for ix, (layer, ax) in enumerate(zip(layers, axs.flatten())):
         sns.distplot(layer, ax=ax);
 
 
+# ### Implement with Keras
+
+
+
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+import tensorflow as tf
+
+
+
+
+tf.reset_default_graph()
+model = Sequential()
+model.add(Dense(32, input_dim=12, activation='relu', use_bias=True))
+model.add(Dense(1))
+model.compile(optimizer='rmsprop',
+              loss='mean_squared_error',
+              metrics=['acc'])
+
+
+
+
+model.summary()
+
+
+
+
+model.fit(df.drop('target', axis=1), df['target'], epochs=20);
+
+
 # # Summary
 
 # There is a quite a bit we can do to improve the results we obtained in this tutorial, and we've covered only some of most basic techniques involved with implementing a neural network from scratch.
@@ -364,6 +393,6 @@ for ix, (layer, ax) in enumerate(zip(layers, axs.flatten())):
 # Ideas to explore are:
 #  - normalizing the data during preprocessing
 #  - the consequence of using different types of activation functions
-#  - activation function saturation (see optimzation notbook)
+#  - activation function saturation (see optimization notebook)
 #  - unwanted variable correlation (linear dependance across columns)
 
