@@ -302,30 +302,43 @@ plt.xlabel('step'), plt.ylabel('loss'), plt.title("Loss");
 plt.xlim((0, 50))
 
 
-# #### Test
+# #### Root Mean Squared Error
+
+
+
+from sklearn.metrics import mean_squared_error #(y_true, y_pred)
+
+# OR
+
+def rmse(target, pred):
+    assert len(target) == len(pred)
+    return np.sqrt(np.sum(np.square(pred - target)) / float(len(target)))
+
 
 
 
 test_error = list()
 residuals = list()
-y_true = list()
-predictions = list()
-_, batched_test_data = data_batcher(df, batch_size=batch_size)
 
-for x, y in batched_test_data:
-    y_true.append(y)
-    prediction = predict(x, use_nonlinearity, hidden_weights, output_weights, hidden_bias, output_bias)
-    predictions.append(prediction)
-    test_error.append(loss_function(prediction, y))
+test_X = np.vstack([x[0] for x in list(data_batcher(df, batch_size=batch_size)[1])])
+targets = np.vstack([x[1] for x in list(data_batcher(df, batch_size=batch_size)[1])])
 
-print('Average sample error: {}'.format(np.mean(np.vstack(test_error))))
+predictions = predict(test_X, use_nonlinearity, hidden_weights, output_weights, hidden_bias, output_bias)[:, 0]
+
+print('Root Mean Squared Error: {}'.format(mean_squared_error(targets, predictions)))
+print('Our rmse: {}'.format(rmse(targets, predictions)))
+
+
+
+
+plt.hist(np.vstack(predictions)[:, 0]);
 
 
 # #### Residuals
 
 
 
-plt.scatter(np.vstack(y_true), np.vstack(y_true) - np.vstack(predictions))
+plt.scatter(np.vstack(targets), np.vstack(targets.reshape(-1, 1)) - np.vstack(predictions))
 plt.axhline(0);
 plt.axvline(0);
 
@@ -334,8 +347,17 @@ plt.axvline(0);
 
 
 
-r2_score(np.vstack(y_true), np.vstack(predictions))
+r2_score(targets, np.vstack(predictions))
 
+
+# There is a quite a bit we can do to improve the results we obtained in this tutorial, and we've covered only some of most basic techniques involved with implementing a neural network from scratch.
+# 
+# Ideas to explore are:
+#  - normalizing the data during preprocessing
+#  - the consequence of using different types of activation functions
+#  - activation function saturation (see optimization notebook)
+#  - unwanted variable correlation (linear dependance across columns)
+#  
 
 # ## Visualizing the weights of the network
 
@@ -373,12 +395,21 @@ model.add(Dense(32, input_dim=12, activation='relu', use_bias=True))
 model.add(Dense(1))
 model.compile(optimizer='rmsprop',
               loss='mean_squared_error',
-              metrics=['acc'])
+              metrics=['mse'])
 
 
 
 
 model.summary()
+
+
+# ### What might it take to assess a model?
+
+
+
+# Split data
+inputs = df.drop('target', axis=1).values
+targets = df['target'].values
 
 
 
@@ -388,11 +419,14 @@ model.fit(df.drop('target', axis=1), df['target'], epochs=20);
 
 # # Summary
 
-# There is a quite a bit we can do to improve the results we obtained in this tutorial, and we've covered only some of most basic techniques involved with implementing a neural network from scratch.
+# Building a model is actually the easy part! If we implement a network from scratch, it can be a bit tedious, however modern deep learning libraries such as keras, and even tensorflow, contain abstractions that make implementing simple models relatively easy.
 # 
-# Ideas to explore are:
-#  - normalizing the data during preprocessing
-#  - the consequence of using different types of activation functions
-#  - activation function saturation (see optimization notebook)
-#  - unwanted variable correlation (linear dependance across columns)
+# The difficult part is figuring out how to frame the problem, which model architecture to use, which of the countless hyperparameters possible to use, and how to determine/when to decide that the performance of the model is good enough. 
+# 
+# For a short list of examples demonstrating the diversity of metrics available, you can check out: 
+# https://www.analyticsvidhya.com/blog/2016/02/7-important-model-evaluation-error-metrics/
+# 
+# The list doesn't even stop there! In fact, when we approach a unique problem, we may need to use less common evaluation metrics (for example, we use MRR with answerbot) or perhaps one may need to invent an entirely new metric!
+# 
+# This is what makes the world of machine learning so exciting!
 
