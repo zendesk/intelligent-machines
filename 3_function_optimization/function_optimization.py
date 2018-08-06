@@ -18,6 +18,9 @@
 #  - Optimizing free parameters of a parameterized function to achieve a target distribution
 #      - learning parameters to match output values to target output values
 #  - How a neural network is optimized
+#   
+#  This notebook follow information presented in:
+#  http://www.deeplearningbook.org/
 
 # #### Imports
 
@@ -95,13 +98,13 @@ linear(x, m=2)
 
 
 def non_linear(x):
-    return (x ** 3) + (x ** 2) / (x ** 3)
+    return (x**3) - 2.*x
 
 x = np.linspace(-10, 10, 200)
 y = non_linear(x)
 plt.plot(x, y, linestyle='--')
-formatter(title='f(x)=(x ** 3) + (x ** 2) / (x ** 3)')
-plt.xlim((-3, 3));plt.ylim((-15, 15));
+formatter(title='f(x)=(x^3) - 2x')
+plt.xlim((-3, 3));plt.ylim((-5, 5));
 
 
 # This is clearly not a monotonic function and we can make a choice - do we want to find a maximum or a minimum value? Furthermore, the line doesn't not linearly increase (i.e. the y-value output by the function does not increase proportionally to increases in the input x).
@@ -392,19 +395,23 @@ def function_to_optimize(x):
     return 3*(x**2)
 def derivative_of_function(x):
     return 6*x
+scaling_coef = 0.3
+x_point = -5.
 
-# Try this function out too!
+
+# # # Try this function out too!
 # def function_to_optimize(x):
-#     return ((1/4)*x**4) + ((1/3)*x**3) -((1/2)*x**2)
+#     return ((1/8)*x**4) + ((1/3)*x**3) - ((1/2)*x**2) - 2
 # def derivative_of_function(x):
-#     return (x**3) + (x**2) -(x)
+#     return ((1/2)*(x**3)) + (x**2) - x
+
+scaling_coef = .3
+x_point = 5. #np.random.randint(-10, 10)
 
 
 minimum_acceptable_threshold = 0.0001
-x_point = 5. #np.random.randint(-10, 10)
 print('Starting Point: ', x_point)
 max_iterations = 3000
-scaling_coef = 0.3
 xs = list()
 
 iterations = 0
@@ -429,7 +436,10 @@ yline = function_to_optimize(xline)
 ax.plot(xline, yline, linestyle='--', alpha=0.4)
 ax.plot(xs, [function_to_optimize(x) for x in xs]);
 ax.scatter(xs, [function_to_optimize(x) for x in xs]);
+
 ax.set_ylim((-1, 50));ax.set_xlim((-5, 5))
+# ax.set_ylim((-10, 10));ax.set_xlim((-6, 6))
+
 formatter()
 
 print("Iterations until optimized: {}".format(iterations))
@@ -699,7 +709,7 @@ plt.hist(np.random.normal(mean, std, samples), bins=100);
 #  - _Says: weight update equals the dot product of the output of the layer below the current delta transposed with the current delta_
 #  - _To update the weights, subtract the scaled weight update from the weights_
 
-# ![image.png](attachment:image.png)
+# ![backprop](./images/backprop.png)
 # http://neuralnetworksanddeeplearning.com/chap2.html
 
 # #### Implementation of backprop
@@ -816,54 +826,4 @@ for title, func, ax in zip(titles, funcs, axes.flatten()):
 # 
 # 
 # We then applied these concepts to neural networks and reasoned about the composition of a neural network to figure out that we can treat the network as a single parameterized function. We then studied the backpropogation algorithm to learn out precisely how to update the parameters during training.
-
-# # Bonus content: deriving the gradient of sum of squares
-
-# 
-# The leading $\frac{1}{2}$ is simply a scaling factor, so we can ignore this.
-# 
-# $ = (Ax − b)^2$
-# 
-# $ = (Ax-b)^\top(Ax-b)$
-# 
-# $ = ((Ax)^\top-b^\top)(Ax-b)$
-# 
-# $ = (A^\top x^\top - b^\top)(Ax-b)$
-# 
-# $ = (x^\top A^\top A - x) - (b^\top Ax) - (x^\top A^\top b) + (b^\top b)$
-# 
-# 
-# From here we isolate the terms.
-# 
-# $f(x)_1 = x^\top A^\top A - x$
-# 
-# $f(x)_2 = b^\top Ax  \leftarrow (scalar)$
-# 
-# $f(x)_3 = x^\top A^\top b$
-# 
-# $f(x)_4 = b^\top b  \leftarrow (scalar)$
-# 
-# Now we find the partial derivatives. In other words, we find the derivative for each of these functions by setting each other term to zero.
-# 
-# $$gradient = [\bigtriangledown f(x)]_p = \frac{\partial f}{\partial x_p}$$
-# 
-# So the gradient in this case is defined as the partial derivatives of the function f with respect to the input variables $x$. So anytime there is no $x$ in the function, the gradient will be zero. 
-# 
-# Thus...
-# 
-# 
-# $$ \bigtriangledown f(x)_1 = \frac{\partial f_1}{\partial x_p} = A^\top Ax $$
-# 
-# $$ \bigtriangledown f(x)_2 = \frac{\partial f_2}{\partial x_p} = 0         $$
-# 
-# $$ \bigtriangledown f(x)_3 = \frac{\partial f_3}{\partial x_p} = A^\top b  $$ 
-# 
-# $$ \bigtriangledown f(x)_4 = \frac{\partial f_4}{\partial x_p} = 0         $$
-# 
-# Recombining the partial derivatives yields the function:
-# 
-# $$\bigtriangledown f(x) =  A^\top Ax - A^\top b$$
-# 
-# So to summarize:
-# $$\bigtriangledown_x  f(\frac{1}{2}||Ax − b||^2) = A^\top Ax-A^\top b$$
 
