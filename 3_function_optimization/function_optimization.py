@@ -13,9 +13,9 @@
 # 
 # #### What we will cover
 #  - Terminology associated with function optimization
-#  - Minimization/maximization of non-parameterized functionsf
+#  - Minimization/maximization of non-parameterized functions
 #      - learning input/output values
-#  - Optimizing free parameters of a parameterized function to achieve a target distribution
+#  - Optimizing free parameters of a parameterized function to model a target distribution
 #      - learning parameters to match output values to target output values
 #  - How a neural network is optimized
 #   
