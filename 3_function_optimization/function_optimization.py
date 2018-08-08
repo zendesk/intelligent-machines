@@ -491,7 +491,11 @@ print(OptimizeResult.__doc__)
 # 
 # The vector of partial derivatives that we produce by doing is referred to as the **gradient** of the function. We can optimize multivariable functions by computing the gradient similar to how we optimized the function using the derivative in the previous example.
 # 
-# $$\bigtriangledown f(a, b, c) = [\frac{da}{dy}, \frac{db}{dy}, \frac{dc}{dy}]$$
+# 
+# 
+# $$\bigtriangledown f(a, b, c) = [\frac{{\partial}y}{{\partial}a}, \frac{{\partial}y}{{\partial}b}, \frac{{\partial}y}{{\partial}c}]$$
+# 
+# where the symbol $\partial$ indicates the partial derivative. Note - each element in the list above is the result of passing the original input value for that variable through the partial derivative function for the corresponding portion of the function that uses that variable.
 
 
 
